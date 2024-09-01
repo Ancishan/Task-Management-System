@@ -1,7 +1,24 @@
 
+import { Link, useNavigate } from 'react-router-dom';
 import logo from '../assets/TSM-logo.png'
+import icon from '../assets/placeholder.jpg'
+import useAuth from '../hooks/UseAuth';
+
 
 const Navbar = () => {
+
+    const { user, logOut } = useAuth();
+   
+    const navigate = useNavigate();
+
+    const handleLogOut = () => {
+        logOut()
+            .then(() => {
+                navigate('/login')
+            })
+            .catch(error => console.log(error));
+    };
+
 
     return (
         <div>
@@ -15,20 +32,26 @@ const Navbar = () => {
                             <div className="w-10 rounded-full">
                                 <img
                                     alt="Tailwind CSS Navbar component"
-                                    src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.jpg" />
+                                    src={user?.photoURL || icon} />
                             </div>
                         </div>
-                        <ul
-                            tabIndex={0}
-                            className="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow">
-                            <li>
-                                <a className="justify-between">
-                                    Profile
-                                    <span className="badge">New</span>
-                                </a>
-                            </li>
-                            <li><a>Settings</a></li>
-                            <li><a>Logout</a></li>
+                        <ul tabIndex={0} className="menu menu-compact dropdown-content mt-3 p-2 shadow bg-base-700 rounded-box w-52">
+                            {user ? (
+                                
+                                    <li>
+                                        <button onClick={handleLogOut}>Logout</button>
+                                    </li>
+                               
+                            ) : (
+                                <>
+                                    <li>
+                                        <Link to="/login">Login</Link>
+                                    </li>
+                                    <li>
+                                        <Link to="/register">Register</Link>
+                                    </li>
+                                </>
+                            )}
                         </ul>
                     </div>
                 </div>

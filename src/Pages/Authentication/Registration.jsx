@@ -1,13 +1,17 @@
 import { FcGoogle } from 'react-icons/fc';
-import { TbFidgetSpinner } from 'react-icons/tb'; 
+import { TbFidgetSpinner } from 'react-icons/tb';
 import { Link, useNavigate } from 'react-router-dom';
-import useAuth from '../../hooks/UseAuth'; 
-import { imageUpload } from '../../API/Utlis'; 
+import useAuth from '../../hooks/UseAuth';
+import { imageUpload } from '../../API/Utlis';
 import toast from 'react-hot-toast';
+import { useState } from 'react';
+import UseAxiosPublic from '../../hooks/UseAxiosPublic';
 
 const Registration = () => {
   const navigate = useNavigate();
-  const { createUser, loading, setLoading, updateUserProfile } = useAuth();
+  const axiosPublic = UseAxiosPublic();
+  const { createUser, setUser, signInWithGoogle, loading, setLoading, updateUserProfile } = useAuth();
+  const [role, setRole] = useState('Worker');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -15,25 +19,32 @@ const Registration = () => {
     const name = form.name.value;
     const email = form.email.value;
     const password = form.password.value;
-    const image = form.image.files[0]; // Corrected to get the selected file
+    const image = form.image.files[0];
 
     try {
       setLoading(true);
       const photoURL = await imageUpload(image);
       const result = await createUser(email, password);
       await updateUserProfile(name, photoURL);
+      await axiosPublic.post('/users', {name, email, role, photoURL});
 
-      // backend
-      SpeechSynthesisUtterance({
+
+      // Manually update the user state
+      setUser({
         ...result.user,
         displayName: name,
         photoURL: photoURL,
+        role: role, // Include role in user state
       });
 
+      // Log the user data to ensure it is being set correctly
+      console.log('User created:', result.user);
+
+      // Navigate and show toast after successful user creation
       navigate('/');
       toast.success('SignUp Successfully');
     } catch (err) {
-      console.log(err);
+      console.error('Error during signup:', err);
       toast.error(err.message);
     } finally {
       setLoading(false);
@@ -41,7 +52,33 @@ const Registration = () => {
   };
 
   const handleGoogleSignIn = async () => {
-    // Add your Google Sign-In logic here
+    try {
+      const result = await signInWithGoogle();
+      const user = result.user;
+      const name = user.displayName;
+      const email = user.email;
+      const photoURL = user.photoURL;
+
+      await axiosPublic.post('/users', {name, email, role, photoURL});
+
+      // Manually update the user state with role
+      setUser({
+        ...user,
+        displayName: name,
+        photoURL: photoURL,
+        role: role, // Include role in user state
+      });
+
+      // Log the user data to ensure it is being set correctly
+      console.log('Google sign-in user:', user);
+
+      // Navigate and show toast after successful sign-in
+      navigate('/');
+      toast.success('SignUp Successfully');
+    } catch (err) {
+      console.error('Error during Google sign-in:', err);
+      toast.error(err.message);
+    }
   };
 
   return (
@@ -100,12 +137,13 @@ const Registration = () => {
             <div>
               <label htmlFor="role" className="block mb-2 text-sm">Role</label>
               <select
-                name="role" // Added name attribute
+                onChange={(e) => setRole(e.target.value)}
+                name="role"
                 required
                 className="select select-bordered w-full"
               >
-                <option>Worker</option>
-                <option>TaskCreator</option>
+                <option value="Worker">Worker</option>
+                <option value="TaskCreator">TaskCreator</option>
               </select>
             </div>
           </div>

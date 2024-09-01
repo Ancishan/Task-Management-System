@@ -42,13 +42,10 @@ const AuthProvider = ({ children }) => {
     return sendPasswordResetEmail(auth, email);
   };
 
-  const logOut = async () => {
+  const logOut = () => {
     setLoading(true);
-    await axios.get(`${import.meta.env.VITE_API_URL}/logout`, {
-      withCredentials: true,
-    });
     return signOut(auth);
-  };
+}
 
   const updateUserProfile = async (name, photoURL) => {
     if (auth.currentUser) {
@@ -60,20 +57,20 @@ const AuthProvider = ({ children }) => {
     }
   };
 
-  const getToken = async email => {
-    const { data } = await axios.post(
-      `${import.meta.env.VITE_API_URL}/jwt`,
-      { email },
-      { withCredentials: true }
-    );
-    return data;
-  };
+  // const getToken = async email => {
+  //   const { data } = await axios.post(
+  //     `${import.meta.env.VITE_API_URL}/jwt`,
+  //     { email },
+  //     { withCredentials: true }
+  //   );
+  //   return data;
+  // };
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, currentUser => {
       setUser(currentUser);
       if (currentUser) {
-        getToken(currentUser.email);
+        // getToken(currentUser.email);
       }
       setLoading(false);
     });
